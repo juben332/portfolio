@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(\\(Get-Item \"c:\\\\Users\\\\My PC\\\\photo-library-site\\\\public\\\\2222222.gif\"\\).Length / 1MB)",
+      "PowerShell(ffmpeg -version 2>&1)",
+      "PowerShell(winget install --id Gyan.FFmpeg -e --accept-package-agreements --accept-source-agreements)",
+      "PowerShell(ffmpeg -i \"c:\\\\Users\\\\My PC\\\\photo-library-site\\\\public\\\\2222222.gif\" -vf \"fps=15,scale=400:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=64[p];[s1][p]paletteuse\" \"c:\\\\Users\\\\My PC\\\\photo-library-site\\\\public\\\\2222222_small.gif\" -y)",
+      "PowerShell(& \"C:\\\\Users\\\\My PC\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Packages\\\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\\\ffmpeg-8.1.1-full_build\\\\bin\\\\ffmpeg.exe\" -i \"c:\\\\Users\\\\My PC\\\\photo-library-site\\\\public\\\\2222222.gif\" -vf \"fps=15,scale=400:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=64[p];[s1][p]paletteuse\" \"c:\\\\Users\\\\My PC\\\\photo-library-site\\\\public\\\\2222222_small.gif\" -y 2>&1)",
+      "PowerShell($s = \\(Get-Item \"c:\\\\Users\\\\My PC\\\\photo-library-site\\\\public\\\\2222222_small.gif\"\\).Length / 1MB; [math]::Round\\($s, 2\\))"
+    ]
+  }
+}
