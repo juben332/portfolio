@@ -25,16 +25,10 @@ export default function ShatterLoader({ children }) {
     const section = sectionRef.current;
     if (!container || !section) return;
 
-    const getTop = (el) => {
-      let top = 0;
-      while (el && el !== container) { top += el.offsetTop; el = el.offsetParent; }
-      return top;
-    };
-
     const trigger = () => {
       if (triggered.current) return;
       const scrolled = container.scrollTop;
-      const sectionTop = getTop(section);
+      const sectionTop = section.offsetTop;
       const viewH = container.clientHeight;
       if (scrolled + viewH * 0.5 >= sectionTop) {
         triggered.current = true;
