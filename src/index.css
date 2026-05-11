@@ -18,13 +18,13 @@ body { -webkit-font-smoothing: antialiased; overflow: hidden; }
   overflow: hidden;
   transform: translate(0,0) rotate(0);
   opacity: 1;
-  transition: transform 4.2s cubic-bezier(0.33,0,0.3,1), opacity 3.8s ease-out;
+  transition: transform 6s cubic-bezier(0.25,0,0.2,1), opacity 5.5s ease-out;
   will-change: transform, opacity;
 }
 .shard-bg {
   position: absolute;
   inset: 0;
-  background: #080808 url('/GIF3.0.gif') center/cover no-repeat;
+  background: #050505 url('/bg-pattern.svg') center/cover no-repeat;
 }
 .loader-text {
   position: absolute;
