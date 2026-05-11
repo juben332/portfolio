@@ -150,7 +150,7 @@ export default function PhotoLibrary() {
   // Letter positions — playful text above the stack
   const letterPositions = useMemo(() => {
     if (!stage.w || !stage.h) return [];
-    const baseFontSize = Math.max(28, Math.min(56, stage.w * 0.09));
+    const baseFontSize = Math.max(38, Math.min(80, stage.w * 0.13));
     const charW = baseFontSize * 0.64;
     const lineH = baseFontSize * 1.3;
 
@@ -160,9 +160,9 @@ export default function PhotoLibrary() {
     // place text so its bottom sits ~16px above the stack
     const baseY = stackTopY - textBlockH - 16;
 
-    // playful per-letter color palette (warm/bright on dark red bg)
-    const colors = ['#FFD166', '#FF6B6B', '#fff', '#FFD166', '#FF9F43', '#fff', '#FF6B6B', '#FFD166',
-                    '#fff', '#FF9F43', '#FFD166', '#FF6B6B'];
+    // vivid neon palette for high visibility
+    const colors = ['#FF3CAC', '#FFEC45', '#00F5FF', '#FF6B00', '#B9FF3C', '#FF3CAC', '#FFEC45', '#00F5FF',
+                    '#FF6B00', '#B9FF3C', '#FF3CAC', '#FFEC45'];
 
     return ALL_LETTERS.map((l, gi) => {
       // slight size variation per letter
@@ -262,7 +262,7 @@ export default function PhotoLibrary() {
               userSelect: 'none',
               zIndex: 1,
               fontFamily: 'inherit',
-              textShadow: '0 2px 12px rgba(0,0,0,0.4)',
+              textShadow: '0 0 18px currentColor, 0 0 40px currentColor, 0 2px 8px rgba(0,0,0,0.8)',
             }}
             animate={scattered ? {
               x: pos.scatterX,
