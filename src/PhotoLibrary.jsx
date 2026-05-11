@@ -213,7 +213,7 @@ export default function PhotoLibrary() {
     <div style={styles.page}>
       <header style={styles.header}>
         <div>
-          <h1 style={styles.title}>Library</h1>
+          <h1 style={styles.title}>PORTFOLIO</h1>
           <p style={styles.subtitle}>{PHOTOS.length.toLocaleString()} items</p>
         </div>
         <div style={styles.headerActions}>
@@ -377,12 +377,6 @@ export default function PhotoLibrary() {
                 )}
               </motion.div>
 
-              <motion.p
-                style={styles.caption}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0, transition: { delay: 0.25 } }}
-                exit={{ opacity: 0 }}
-              >{selected.label}</motion.p>
             </motion.div>
           )}
         </AnimatePresence>
