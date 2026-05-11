@@ -4,3 +4,61 @@ body { -webkit-font-smoothing: antialiased; overflow: hidden; }
 .scroll-container { width: 100%; height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
 .scroll-container::-webkit-scrollbar { display: none; }
 .scroll-section { width: 100%; height: 100vh; scroll-snap-align: start; flex-shrink: 0; }
+
+/* ── Shatter Loader ── */
+.shatter-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+.shard {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform: translate(0,0) rotate(0);
+  opacity: 1;
+  transition: transform 4.2s cubic-bezier(0.33,0,0.3,1), opacity 3.8s ease-out;
+  will-change: transform, opacity;
+}
+.shard-bg {
+  position: absolute;
+  inset: 0;
+  background: #080808 url('/GIF3.0.gif') center/cover no-repeat;
+}
+.loader-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  color: rgba(255,255,255,0.85);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: 0.35em;
+  font-size: 12px;
+  text-transform: uppercase;
+  transition: opacity 1s ease-out;
+  pointer-events: none;
+}
+.loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-top-color: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  margin-bottom: 1.25rem;
+  animation: shatter-spin 1s linear infinite;
+}
+@keyframes shatter-spin { to { transform: rotate(360deg); } }
+.shatter-loader.shattering .loader-text { opacity: 0; }
+.shatter-loader.shattering .shard-1 { transform: translate(-180%,-150%) rotate(-25deg); opacity: 0; }
+.shatter-loader.shattering .shard-2 { transform: translate(-30%,-220%) rotate(-10deg); opacity: 0; }
+.shatter-loader.shattering .shard-3 { transform: translate(190%,-160%) rotate(28deg); opacity: 0; }
+.shatter-loader.shattering .shard-4 { transform: translate(-230%,-20%) rotate(-18deg); opacity: 0; }
+.shatter-loader.shattering .shard-5 { transform: translate(10%,-260%) rotate(6deg); opacity: 0; }
+.shatter-loader.shattering .shard-6 { transform: translate(230%,-15%) rotate(20deg); opacity: 0; }
+.shatter-loader.shattering .shard-7 { transform: translate(-190%,190%) rotate(-22deg); opacity: 0; }
+.shatter-loader.shattering .shard-8 { transform: translate(15%,240%) rotate(12deg); opacity: 0; }
+.shatter-loader.shattering .shard-9 { transform: translate(210%,180%) rotate(30deg); opacity: 0; }

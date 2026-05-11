@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
+import ShatterLoader from './ShatterLoader';
 
 const skills = ['React', 'Motion Design', 'UI/UX', 'Photography', 'Framer Motion', 'Vite'];
 
 export default function About() {
   return (
+    <ShatterLoader>
     <div style={{
       width: '100%',
       height: '100%',
@@ -153,5 +155,6 @@ export default function About() {
 
       </div>
     </div>
+    </ShatterLoader>
   );
 }
