@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-const HOLD_MS = 0;
-const SHATTER_MS = 1200;
+const HOLD_MS = 300;
+const SHATTER_MS = 2000;
 
 const shards = [
   { n: 1, clip: 'polygon(0 0, 35% 0, 30% 40%, 0 35%)' },
