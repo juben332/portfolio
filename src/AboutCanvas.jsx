@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-// ── Text beats ───────────────────────────────────────────────────
+const FRAME_COUNT = 212;
+
 const BEATS = [
   {
     id: 'a', range: [0, 0.22], align: 'center',
@@ -24,90 +25,10 @@ const BEATS = [
   },
 ];
 
-// ── Aurora orbs ──────────────────────────────────────────────────
-const ORBS = [
-  { bx: 0.15, by: 0.25, r: 420, color: [90,  40,  220] },
-  { bx: 0.85, by: 0.20, r: 360, color: [220, 40,  120] },
-  { bx: 0.50, by: 0.78, r: 440, color: [40,  120, 220] },
-  { bx: 0.22, by: 0.75, r: 300, color: [160, 60,  220] },
-  { bx: 0.78, by: 0.55, r: 380, color: [220, 100, 40]  },
-  { bx: 0.50, by: 0.38, r: 320, color: [40,  200, 180] },
-];
-
-function orbState(orb, p, t) {
-  const wx = Math.sin(t * 0.3 + orb.bx * 6.28) * 0.04;
-  const wy = Math.cos(t * 0.25 + orb.by * 6.28) * 0.04;
-
-  if (p < 0.33) {
-    const pct = p / 0.33;
-    return { x: orb.bx + wx, y: orb.by + wy, op: 0.12 + pct * 0.08, sc: 1 };
-  }
-  if (p < 0.66) {
-    const pct = (p - 0.33) / 0.33;
-    return {
-      x: orb.bx + (0.5 - orb.bx) * pct * 0.55 + wx * (1 - pct),
-      y: orb.by + (0.5 - orb.by) * pct * 0.55 + wy * (1 - pct),
-      op: 0.18 + pct * 0.14,
-      sc: 1 + pct * 0.35,
-    };
-  }
-  const pct = (p - 0.66) / 0.34;
-  const angle = orb.bx * Math.PI * 2 + t * 0.18;
-  const dist  = 0.12 + pct * 0.22;
-  return {
-    x: 0.5 + Math.cos(angle) * dist + wx * 0.3,
-    y: 0.5 + Math.sin(angle) * dist * 0.55 + wy * 0.3,
-    op: 0.32 - pct * 0.18,
-    sc: 1.35 + pct * 0.45,
-  };
+function frameUrl(i) {
+  return `/images/ezgif-frame-${String(i + 1).padStart(3, '0')}.png`;
 }
 
-function drawFrame(canvas, p, t) {
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
-  const dpr = window.devicePixelRatio || 1;
-  const lW = W / dpr;
-  const lH = H / dpr;
-
-  ctx.save();
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, lW, lH);
-  ctx.fillStyle = '#050505';
-  ctx.fillRect(0, 0, lW, lH);
-
-  // aurora blobs
-  ctx.globalCompositeOperation = 'screen';
-  ORBS.forEach(orb => {
-    const { x, y, op, sc } = orbState(orb, p, t);
-    const cx = x * lW;
-    const cy = y * lH;
-    const r  = orb.r * sc * (Math.min(lW, lH) / 900);
-    const g  = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    const [rr, gg, bb] = orb.color;
-    g.addColorStop(0,   `rgba(${rr},${gg},${bb},${op})`);
-    g.addColorStop(0.45,`rgba(${rr},${gg},${bb},${op * 0.35})`);
-    g.addColorStop(1,   `rgba(${rr},${gg},${bb},0)`);
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  // subtle horizontal scan line at scroll position
-  ctx.globalCompositeOperation = 'source-over';
-  const scanY = p * lH;
-  const scanG = ctx.createLinearGradient(0, scanY - 60, 0, scanY + 60);
-  scanG.addColorStop(0,   'rgba(255,255,255,0)');
-  scanG.addColorStop(0.5, `rgba(255,255,255,${0.03 + p * 0.04})`);
-  scanG.addColorStop(1,   'rgba(255,255,255,0)');
-  ctx.fillStyle = scanG;
-  ctx.fillRect(0, scanY - 60, lW, 120);
-
-  ctx.restore();
-}
-
-// ── Beat helpers ─────────────────────────────────────────────────
 function beatOp(range, p) {
   const [s, e] = range;
   const fi = s + 0.08, fo = e - 0.08;
@@ -116,6 +37,7 @@ function beatOp(range, p) {
   if (p > fo) return 1 - (p - fo) / 0.08;
   return 1;
 }
+
 function beatY(range, p) {
   const [s, e] = range;
   if (p < s) return 28;
@@ -124,15 +46,38 @@ function beatY(range, p) {
   return 0;
 }
 
-// ── Component ────────────────────────────────────────────────────
 export default function AboutCanvas() {
   const wrapperRef  = useRef(null);
   const canvasRef   = useRef(null);
-  const rafRef      = useRef(null);
+  const imagesRef   = useRef([]);
   const progressRef = useRef(0);
 
-  const [progress,       setProgress]       = useState(0);
-  const [showIndicator,  setShowIndicator]  = useState(true);
+  const [progress,      setProgress]      = useState(0);
+  const [loaded,        setLoaded]        = useState(0);
+  const [ready,         setReady]         = useState(false);
+  const [showIndicator, setShowIndicator] = useState(true);
+
+  // ── Preload all frames ─────────────────────────────────────────
+  useEffect(() => {
+    const imgs = [];
+    let done = 0;
+
+    for (let i = 0; i < FRAME_COUNT; i++) {
+      const img = new Image();
+      img.src = frameUrl(i);
+      img.onload = img.onerror = () => {
+        done++;
+        setLoaded(done);
+        if (done === FRAME_COUNT) setReady(true);
+      };
+      imgs.push(img);
+    }
+    imagesRef.current = imgs;
+
+    return () => {
+      imgs.forEach(img => { img.onload = null; img.onerror = null; });
+    };
+  }, []);
 
   // ── Canvas resize ──────────────────────────────────────────────
   useEffect(() => {
@@ -154,7 +99,6 @@ export default function AboutCanvas() {
   useEffect(() => {
     const container = document.querySelector('.scroll-container');
     if (!container) return;
-
     const onScroll = () => {
       const wrapper = wrapperRef.current;
       if (!wrapper) return;
@@ -165,32 +109,47 @@ export default function AboutCanvas() {
       setProgress(p);
       setShowIndicator(p < 0.04);
     };
-
     container.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => container.removeEventListener('scroll', onScroll);
   }, []);
 
-  // ── Animation loop ─────────────────────────────────────────────
+  // ── Draw frame on scroll ───────────────────────────────────────
   useEffect(() => {
+    if (!ready) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    let start = null;
-    const loop = ts => {
-      if (!start) start = ts;
-      const t = (ts - start) / 1000;
-      drawFrame(canvas, progressRef.current, t);
-      rafRef.current = requestAnimationFrame(loop);
-    };
-    rafRef.current = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, []);
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const lW  = canvas.width  / dpr;
+    const lH  = canvas.height / dpr;
 
-  // ── Render ─────────────────────────────────────────────────────
+    const idx = Math.min(FRAME_COUNT - 1, Math.floor(progress * FRAME_COUNT));
+    const img = imagesRef.current[idx];
+    if (!img || !img.complete) return;
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, lW, lH);
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(0, 0, lW, lH);
+
+    // center-contain the frame
+    const imgW = img.naturalWidth  || lW;
+    const imgH = img.naturalHeight || lH;
+    const scale = Math.min(lW / imgW, lH / imgH);
+    const dw = imgW * scale;
+    const dh = imgH * scale;
+    const dx = (lW - dw) / 2;
+    const dy = (lH - dh) / 2;
+    ctx.drawImage(img, dx, dy, dw, dh);
+    ctx.restore();
+  }, [progress, ready]);
+
+  const pct = Math.round((loaded / FRAME_COUNT) * 100);
+
   return (
     <div ref={wrapperRef} style={{ height: '600vh', position: 'relative' }}>
-
-      {/* Sticky viewport */}
       <div style={{
         position: 'sticky', top: 0,
         height: '100vh', width: '100%',
@@ -200,8 +159,42 @@ export default function AboutCanvas() {
         {/* Canvas */}
         <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0 }} />
 
+        {/* Preload overlay */}
+        {!ready && (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 20,
+            background: '#050505',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: 24,
+          }}>
+            <div style={{
+              width: 40, height: 40,
+              border: '1.5px solid rgba(255,255,255,0.1)',
+              borderTopColor: 'rgba(255,255,255,0.8)',
+              borderRadius: '50%',
+              animation: 'spin 0.9s linear infinite',
+            }} />
+            <div style={{ width: 180, height: 1.5, background: 'rgba(255,255,255,0.08)', borderRadius: 1 }}>
+              <div style={{
+                height: '100%', borderRadius: 1,
+                width: `${pct}%`,
+                background: 'linear-gradient(to right, rgba(160,80,255,0.9), rgba(80,160,255,0.9))',
+                transition: 'width 0.2s ease',
+              }} />
+            </div>
+            <div style={{
+              fontSize: 11, letterSpacing: '0.2em',
+              color: 'rgba(255,255,255,0.3)',
+              textTransform: 'uppercase',
+              fontFamily: '-apple-system, sans-serif',
+            }}>
+              {pct}%
+            </div>
+          </div>
+        )}
+
         {/* Text beats */}
-        {BEATS.map(beat => {
+        {ready && BEATS.map(beat => {
           const op = beatOp(beat.range, progress);
           const dy = beatY(beat.range, progress);
           if (op < 0.01) return null;
@@ -216,29 +209,22 @@ export default function AboutCanvas() {
             <div key={beat.id} style={{
               position: 'absolute', top: '50%',
               zIndex: 10, pointerEvents: 'none',
-              opacity: op,
-              ...align,
+              opacity: op, ...align,
             }}>
               <div style={{
                 fontSize: 'clamp(44px, 9vw, 100px)',
-                fontWeight: 800,
-                letterSpacing: '-0.04em',
-                lineHeight: 1.0,
-                color: 'rgba(255,255,255,0.92)',
-                whiteSpace: 'pre-line',
+                fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.0,
+                color: 'rgba(255,255,255,0.92)', whiteSpace: 'pre-line',
                 marginBottom: '1.4rem',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
+                fontFamily: '-apple-system, "SF Pro Display", "Segoe UI", sans-serif',
               }}>
                 {beat.title}
               </div>
               <div style={{
                 fontSize: 'clamp(13px, 1.8vw, 17px)',
-                fontWeight: 400,
-                lineHeight: 1.75,
-                color: 'rgba(255,255,255,0.52)',
-                whiteSpace: 'pre-line',
-                maxWidth: 380,
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif',
+                fontWeight: 400, lineHeight: 1.75,
+                color: 'rgba(255,255,255,0.52)', whiteSpace: 'pre-line', maxWidth: 380,
+                fontFamily: '-apple-system, "SF Pro Text", "Segoe UI", sans-serif',
                 ...(beat.align === 'right' ? { marginLeft: 'auto' } : {}),
               }}>
                 {beat.sub}
@@ -247,44 +233,47 @@ export default function AboutCanvas() {
           );
         })}
 
-        {/* Scroll-to-explore indicator */}
-        <div style={{
-          position: 'absolute', bottom: 36, left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-          opacity: showIndicator ? 1 : 0,
-          transition: 'opacity 0.6s ease',
-          pointerEvents: 'none',
-        }}>
+        {/* Scroll indicator */}
+        {ready && (
           <div style={{
-            fontSize: 10, letterSpacing: '0.22em',
-            color: 'rgba(255,255,255,0.3)',
-            textTransform: 'uppercase',
-            fontFamily: '-apple-system, sans-serif',
+            position: 'absolute', bottom: 36, left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+            opacity: showIndicator ? 1 : 0,
+            transition: 'opacity 0.6s ease',
+            pointerEvents: 'none',
           }}>
-            Scroll to Explore
+            <div style={{
+              fontSize: 10, letterSpacing: '0.22em',
+              color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase',
+              fontFamily: '-apple-system, sans-serif',
+            }}>
+              Scroll to Explore
+            </div>
+            <div style={{
+              width: 1, height: 44,
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)',
+            }} />
           </div>
-          <div style={{
-            width: 1, height: 44,
-            background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)',
-          }} />
-        </div>
+        )}
 
-        {/* Progress bar (scroll depth) */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0,
-          height: 1.5, width: '100%',
-          background: 'rgba(255,255,255,0.06)',
-        }}>
+        {/* Progress bar */}
+        {ready && (
           <div style={{
-            height: '100%',
-            width: `${progress * 100}%`,
-            background: 'linear-gradient(to right, rgba(160,80,255,0.8), rgba(80,160,255,0.8))',
-            transition: 'width 0.1s linear',
-          }} />
-        </div>
-
+            position: 'absolute', bottom: 0, left: 0,
+            height: 1.5, width: '100%', background: 'rgba(255,255,255,0.06)',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${progress * 100}%`,
+              background: 'linear-gradient(to right, rgba(160,80,255,0.8), rgba(80,160,255,0.8))',
+              transition: 'width 0.08s linear',
+            }} />
+          </div>
+        )}
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
