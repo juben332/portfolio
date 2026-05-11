@@ -23,21 +23,23 @@ export default function ShatterLoader({ children }) {
   useEffect(() => {
     const container = document.querySelector('.scroll-container');
     const section = sectionRef.current;
-    if (!section) return;
+    if (!container || !section) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !triggered.current) {
-          triggered.current = true;
-          setTimeout(() => setPhase('shattering'), HOLD_MS);
-          setTimeout(() => setPhase('done'), HOLD_MS + SHATTER_MS);
-        }
-      },
-      { root: container, threshold: 0.6 }
-    );
+    const trigger = () => {
+      if (triggered.current) return;
+      const scrolled = container.scrollTop;
+      const sectionTop = section.offsetTop;
+      const viewH = container.clientHeight;
+      if (scrolled + viewH * 0.5 >= sectionTop) {
+        triggered.current = true;
+        setTimeout(() => setPhase('shattering'), HOLD_MS);
+        setTimeout(() => setPhase('done'), HOLD_MS + SHATTER_MS);
+      }
+    };
 
-    observer.observe(section);
-    return () => observer.disconnect();
+    container.addEventListener('scroll', trigger);
+    trigger(); // check in case already in view
+    return () => container.removeEventListener('scroll', trigger);
   }, []);
 
   return (
