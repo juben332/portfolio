@@ -15,7 +15,7 @@ export default function App() {
         </BackgroundPaths>
       </section>
 
-      <section id="about" className="scroll-section">
+      <section id="about" className="scroll-section-tall">
         <About />
       </section>
 
