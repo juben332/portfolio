@@ -2,6 +2,7 @@ import PhotoLibrary from './PhotoLibrary'
 import { BackgroundPaths } from './BackgroundPaths'
 import { AnimatedNav } from './AnimatedNav'
 import About from './About'
+import Contact from './Contact'
 
 export default function App() {
   return (
@@ -16,6 +17,10 @@ export default function App() {
 
       <section id="about" className="scroll-section">
         <About />
+      </section>
+
+      <section id="contact" className="scroll-section">
+        <Contact />
       </section>
     </div>
   )

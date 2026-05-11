@@ -3,8 +3,9 @@ import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-
 import { Navigation, Aperture } from 'lucide-react';
 
 const navItems = [
-  { name: 'Home',  href: '#home' },
-  { name: 'About', href: '#about' },
+  { name: 'Home',    href: '#home' },
+  { name: 'About',   href: '#about' },
+  { name: 'Contact', href: '#contact' },
 ];
 
 const EXPAND_SCROLL_THRESHOLD = 80;
