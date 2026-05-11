@@ -3,10 +3,8 @@ import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-
 import { Navigation, Aperture } from 'lucide-react';
 
 const navItems = [
-  { name: 'Home',     href: '#' },
-  { name: 'About',    href: '#' },
-  { name: 'Services', href: '#' },
-  { name: 'Contact',  href: '#' },
+  { name: 'Home',  href: '#home' },
+  { name: 'About', href: '#about' },
 ];
 
 const EXPAND_SCROLL_THRESHOLD = 80;
@@ -59,6 +57,12 @@ export function AnimatedNav() {
   const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 640);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isExpanded, setExpanded] = React.useState(true);
+
+  const scrollTo = (href) => {
+    const container = document.querySelector('.scroll-container');
+    const target = document.querySelector(href);
+    if (container && target) container.scrollTo({ top: target.offsetTop, behavior: 'smooth' });
+  };
 
   const { scrollY } = useScroll();
   const lastScrollY = React.useRef(0);
@@ -189,7 +193,7 @@ export function AnimatedNav() {
                   initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.055, type: 'spring', damping: 16 }}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(e) => { e.preventDefault(); scrollTo(item.href); setMobileOpen(false); }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -260,7 +264,7 @@ export function AnimatedNav() {
               key={item.name}
               href={item.href}
               variants={itemVariants}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollTo(item.href); }}
               style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.65)', padding: '4px 10px', borderRadius: 6, textDecoration: 'none', whiteSpace: 'nowrap', transition: 'color 0.2s' }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#fff'}
               onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.65)'}
