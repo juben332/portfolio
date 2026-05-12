@@ -16,66 +16,86 @@ export default function ScratchToReveal({
   const isDrawing = useRef(false);
 
   const [isRevealed, setIsRevealed] = useState(() => {
-    return sessionStorage.getItem(STORAGE_KEY) === 'true';
+    try { return sessionStorage.getItem(STORAGE_KEY) === 'true'; } catch { return false; }
   });
 
-  // Skip cover if user prefers reduced motion
   useEffect(() => {
     const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mql.matches) setIsRevealed(true);
   }, []);
 
-  // Paint the cover onto the canvas
-  useEffect(() => {
+  // Paint canvas cover — retry after 100ms in case layout isn't ready yet
+  const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
-    if (!canvas || !container || isRevealed) return;
+    if (!canvas || !container) return;
 
-    const setup = () => {
-      const rect = container.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = rect.height + 'px';
+    const rect = container.getBoundingClientRect();
+    const w = rect.width || container.offsetWidth;
+    const h = rect.height || container.offsetHeight;
+    if (!w || !h) return;
 
-      const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
-      ctx.fillStyle = coverColor;
-      ctx.fillRect(0, 0, rect.width, rect.height);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
 
-      if (coverText) {
-        const fontSize = Math.min(rect.width / 14, 48);
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.font = `600 ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.letterSpacing = '0.1em';
-        ctx.fillText(coverText, rect.width / 2, rect.height / 2);
-      }
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = coverColor;
+    ctx.fillRect(0, 0, w, h);
+
+    if (coverText) {
+      const fontSize = Math.min(w / 10, 42);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = `600 ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(coverText, w / 2, h / 2);
+    }
+  }, [coverColor, coverText]);
+
+  useEffect(() => {
+    if (isRevealed) return;
+    setupCanvas();
+    const t = setTimeout(setupCanvas, 120);
+    window.addEventListener('resize', setupCanvas);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('resize', setupCanvas);
     };
+  }, [isRevealed, setupCanvas]);
 
-    setup();
-    window.addEventListener('resize', setup);
-    return () => window.removeEventListener('resize', setup);
-  }, [coverColor, coverText, isRevealed]);
+  // Prevent scroll-snap from swallowing touch events on canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || isRevealed) return;
+    const block = (e) => e.preventDefault();
+    canvas.addEventListener('touchstart', block, { passive: false });
+    canvas.addEventListener('touchmove', block, { passive: false });
+    return () => {
+      canvas.removeEventListener('touchstart', block);
+      canvas.removeEventListener('touchmove', block);
+    };
+  }, [isRevealed]);
 
-  const getPoint = (e) => {
+  const getPoint = useCallback((e) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0]?.clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0]?.clientY : e.clientY;
+    const touch = e.touches?.[0] || e.changedTouches?.[0];
+    const clientX = touch ? touch.clientX : e.clientX;
+    const clientY = touch ? touch.clientY : e.clientY;
     if (clientX == null || clientY == null) return null;
     return { x: clientX - rect.left, y: clientY - rect.top };
-  };
+  }, []);
 
   const checkProgress = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !canvas.width || !canvas.height) return;
     const ctx = canvas.getContext('2d');
-    const { width, height } = canvas;
-    const data = ctx.getImageData(0, 0, width, height).data;
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     let cleared = 0, sampled = 0;
     for (let i = 3; i < data.length; i += 4 * 32) {
       if (data[i] === 0) cleared++;
@@ -83,11 +103,11 @@ export default function ScratchToReveal({
     }
     if ((cleared / sampled) * 100 >= threshold) {
       setIsRevealed(true);
-      sessionStorage.setItem(STORAGE_KEY, 'true');
+      try { sessionStorage.setItem(STORAGE_KEY, 'true'); } catch {}
     }
   }, [threshold]);
 
-  const scratch = (point) => {
+  const scratch = useCallback((point) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -107,23 +127,25 @@ export default function ScratchToReveal({
     }
     lastPoint.current = point;
     checkProgress();
-  };
+  }, [brushSize, checkProgress]);
 
-  const handleStart = (e) => {
+  const handleStart = useCallback((e) => {
     isDrawing.current = true;
     lastPoint.current = null;
     const p = getPoint(e);
     if (p) scratch(p);
-  };
-  const handleMove = (e) => {
-    if (!isDrawing.current && !e.touches) return;
+  }, [getPoint, scratch]);
+
+  const handleMove = useCallback((e) => {
+    if (!isDrawing.current) return;
     const p = getPoint(e);
     if (p) scratch(p);
-  };
-  const handleEnd = () => {
+  }, [getPoint, scratch]);
+
+  const handleEnd = useCallback(() => {
     isDrawing.current = false;
     lastPoint.current = null;
-  };
+  }, []);
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
@@ -134,17 +156,18 @@ export default function ScratchToReveal({
           <motion.canvas
             ref={canvasRef}
             style={{
-              position: 'absolute', inset: 0,
-              cursor: 'grab', touchAction: 'none', userSelect: 'none',
+              position: 'absolute', inset: 0, zIndex: 50,
+              cursor: 'crosshair', touchAction: 'none',
+              userSelect: 'none', display: 'block',
             }}
             onMouseDown={handleStart}
-            onMouseMove={(e) => isDrawing.current && handleMove(e)}
+            onMouseMove={handleMove}
             onMouseUp={handleEnd}
             onMouseLeave={handleEnd}
             onTouchStart={handleStart}
             onTouchMove={handleMove}
             onTouchEnd={handleEnd}
-            exit={{ opacity: 0, scale: 1.04 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
           />
         )}
@@ -156,9 +179,9 @@ export default function ScratchToReveal({
           transform: 'translateX(-50%)',
           pointerEvents: 'none', fontSize: 10,
           letterSpacing: '0.22em', textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.4)',
+          color: 'rgba(255,255,255,0.45)',
           fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-          whiteSpace: 'nowrap',
+          whiteSpace: 'nowrap', zIndex: 51,
         }}>
           drag to scratch
         </p>
