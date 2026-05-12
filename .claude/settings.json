@@ -10,7 +10,8 @@
       "Skill(update-config)",
       "Skill(update-config:*)",
       "Bash(git mv *)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\(\"C:\\\\Users\\\\My PC\\\\photo-library-site\\\\public\\\\BG-about.png\"\\); \"$\\($img.Width\\) x $\\($img.Height\\) px\"; $img.Dispose\\(\\))"
     ]
   },
   "hooks": {
