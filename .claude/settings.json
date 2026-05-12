@@ -9,7 +9,8 @@
       "PowerShell($s = \\(Get-Item \"c:\\\\Users\\\\My PC\\\\photo-library-site\\\\public\\\\2222222_small.gif\"\\).Length / 1MB; [math]::Round\\($s, 2\\))",
       "Skill(update-config)",
       "Skill(update-config:*)",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(Select-Object Name)"
     ]
   },
   "hooks": {
