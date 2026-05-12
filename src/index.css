@@ -12,7 +12,7 @@ body { -webkit-font-smoothing: antialiased; overflow: hidden; }
 /* ── About text overlay ── */
 .about-text-container {
   position: absolute;
-  left: 28%;
+  left: 5%;
   top: 50%;
   transform: translateY(-50%);
   width: 38%;
