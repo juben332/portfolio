@@ -4,13 +4,13 @@ import ScratchToReveal from './ScratchToReveal';
 
 export default function About() {
   return (
-    <ScratchToReveal
-      coverColor="#0a0a0a"
-      coverText="SCRATCH TO ENTER"
-      threshold={50}
-      brushSize={70}
-    >
-      <ShatterLoader>
+    <ShatterLoader>
+      <ScratchToReveal
+        coverColor="#0a0a0a"
+        coverText="SCRATCH TO ENTER"
+        threshold={50}
+        brushSize={70}
+      >
         <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
           {/* Background image */}
@@ -43,7 +43,7 @@ export default function About() {
           </div>
 
         </div>
-      </ShatterLoader>
-    </ScratchToReveal>
+      </ScratchToReveal>
+    </ShatterLoader>
   );
 }
