@@ -24,6 +24,14 @@ export default function About() {
 
           {/* Animated text */}
           <div className="about-text-container">
+            <p style={{
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: 'clamp(11px, 1.1vw, 13px)',
+              letterSpacing: '0.25em',
+              textTransform: 'uppercase',
+              marginBottom: 10,
+              fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+            }}>Juben Recto</p>
             <AnimatedText
               text="Frontend Developer & Designer"
               gradientColors="linear-gradient(90deg, #666, #fff, #aaa, #fff, #666)"
