@@ -17,8 +17,8 @@ body { -webkit-font-smoothing: antialiased; overflow: hidden; }
 .ripple-wrapper {
   position: absolute;
   z-index: 30;
-  top: 56px;
-  left: 8px;
+  top: 100px;
+  left: 55px;
   transform: scale(0.35);
   transform-origin: top left;
 }
