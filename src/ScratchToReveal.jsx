@@ -179,7 +179,7 @@ export default function ScratchToReveal({
           transform: 'translateX(-50%)',
           pointerEvents: 'none', fontSize: 10,
           letterSpacing: '0.22em', textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.45)',
+          color: 'rgba(0,0,0,0.35)',
           fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
           whiteSpace: 'nowrap', zIndex: 51,
         }}>

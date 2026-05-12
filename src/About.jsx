@@ -6,8 +6,8 @@ export default function About() {
   return (
     <ShatterLoader>
       <ScratchToReveal
-        coverColor="#0a0a0a"
-        coverText="SCRATCH TO ENTER"
+        coverColor="#f5ede0"
+        coverText=""
         threshold={50}
         brushSize={70}
       >
