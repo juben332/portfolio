@@ -5,8 +5,8 @@ const STORAGE_KEY = 'about-scratch-revealed';
 
 export default function ScratchToReveal({
   children,
-  coverColor = '#0a0a0a',
-  coverText = 'SCRATCH TO ENTER',
+  coverColor = '#f5ede0',
+  coverText = '',
   threshold = 50,
   brushSize = 65,
 }) {
@@ -24,15 +24,11 @@ export default function ScratchToReveal({
     if (mql.matches) setIsRevealed(true);
   }, []);
 
-  // Paint canvas cover — retry after 100ms in case layout isn't ready yet
-  const setupCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
+  const paintCanvas = useCallback((canvas) => {
     const container = containerRef.current;
     if (!canvas || !container) return;
-
-    const rect = container.getBoundingClientRect();
-    const w = rect.width || container.offsetWidth;
-    const h = rect.height || container.offsetHeight;
+    const w = container.offsetWidth;
+    const h = container.offsetHeight;
     if (!w || !h) return;
 
     const dpr = window.devicePixelRatio || 1;
@@ -48,7 +44,7 @@ export default function ScratchToReveal({
 
     if (coverText) {
       const fontSize = Math.min(w / 10, 42);
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.font = `600 ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -56,29 +52,26 @@ export default function ScratchToReveal({
     }
   }, [coverColor, coverText]);
 
+  // Ref callback — fires the moment the canvas mounts into the DOM
+  const setCanvasRef = useCallback((node) => {
+    canvasRef.current = node;
+    if (node) {
+      paintCanvas(node);
+
+      // Prevent scroll-snap from stealing touch events
+      const block = (e) => e.preventDefault();
+      node.addEventListener('touchstart', block, { passive: false });
+      node.addEventListener('touchmove', block, { passive: false });
+    }
+  }, [paintCanvas]);
+
+  // Repaint on resize
   useEffect(() => {
     if (isRevealed) return;
-    setupCanvas();
-    const t = setTimeout(setupCanvas, 120);
-    window.addEventListener('resize', setupCanvas);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener('resize', setupCanvas);
-    };
-  }, [isRevealed, setupCanvas]);
-
-  // Prevent scroll-snap from swallowing touch events on canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || isRevealed) return;
-    const block = (e) => e.preventDefault();
-    canvas.addEventListener('touchstart', block, { passive: false });
-    canvas.addEventListener('touchmove', block, { passive: false });
-    return () => {
-      canvas.removeEventListener('touchstart', block);
-      canvas.removeEventListener('touchmove', block);
-    };
-  }, [isRevealed]);
+    const onResize = () => { if (canvasRef.current) paintCanvas(canvasRef.current); };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [isRevealed, paintCanvas]);
 
   const getPoint = useCallback((e) => {
     const canvas = canvasRef.current;
@@ -153,39 +146,43 @@ export default function ScratchToReveal({
 
       <AnimatePresence>
         {!isRevealed && (
-          <motion.canvas
-            ref={canvasRef}
-            style={{
-              position: 'absolute', inset: 0, zIndex: 50,
-              cursor: 'crosshair', touchAction: 'none',
-              userSelect: 'none', display: 'block',
-            }}
-            onMouseDown={handleStart}
-            onMouseMove={handleMove}
-            onMouseUp={handleEnd}
-            onMouseLeave={handleEnd}
-            onTouchStart={handleStart}
-            onTouchMove={handleMove}
-            onTouchEnd={handleEnd}
+          <motion.div
+            key="scratch-cover"
+            style={{ position: 'absolute', inset: 0, zIndex: 50 }}
+            initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
-          />
+          >
+            <canvas
+              ref={setCanvasRef}
+              style={{
+                position: 'absolute', inset: 0,
+                width: '100%', height: '100%',
+                cursor: 'crosshair', touchAction: 'none',
+                userSelect: 'none', display: 'block',
+              }}
+              onMouseDown={handleStart}
+              onMouseMove={handleMove}
+              onMouseUp={handleEnd}
+              onMouseLeave={handleEnd}
+              onTouchStart={handleStart}
+              onTouchMove={handleMove}
+              onTouchEnd={handleEnd}
+            />
+            <p style={{
+              position: 'absolute', bottom: 28, left: '50%',
+              transform: 'translateX(-50%)',
+              pointerEvents: 'none', fontSize: 10,
+              letterSpacing: '0.22em', textTransform: 'uppercase',
+              color: 'rgba(0,0,0,0.35)',
+              fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+              whiteSpace: 'nowrap',
+            }}>
+              drag to scratch
+            </p>
+          </motion.div>
         )}
       </AnimatePresence>
-
-      {!isRevealed && (
-        <p style={{
-          position: 'absolute', bottom: 28, left: '50%',
-          transform: 'translateX(-50%)',
-          pointerEvents: 'none', fontSize: 10,
-          letterSpacing: '0.22em', textTransform: 'uppercase',
-          color: 'rgba(0,0,0,0.35)',
-          fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-          whiteSpace: 'nowrap', zIndex: 51,
-        }}>
-          drag to scratch
-        </p>
-      )}
     </div>
   );
 }
