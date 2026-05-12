@@ -1,6 +1,7 @@
 import ShatterLoader from './ShatterLoader';
 import { AnimatedText } from './AnimatedText';
 import ScratchToReveal from './ScratchToReveal';
+import { RippleCircles } from './RippleCircles';
 
 export default function About() {
   return (
@@ -21,6 +22,11 @@ export default function About() {
 
           {/* Subtle dark overlay */}
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.28)' }} />
+
+          {/* Ripple circles — top-left mobile, top-right desktop */}
+          <div className="ripple-wrapper">
+            <RippleCircles />
+          </div>
 
           {/* Animated text */}
           <div className="about-text-container">

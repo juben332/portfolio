@@ -9,6 +9,35 @@ body { -webkit-font-smoothing: antialiased; overflow: hidden; }
 .scroll-section { width: 100%; height: 100vh; scroll-snap-align: start; flex-shrink: 0; }
 .scroll-section-tall { width: 100%; height: 600vh; scroll-snap-align: start; flex-shrink: 0; position: relative; }
 
+/* ── Ripple circles ── */
+@keyframes ripple {
+  0%, 100% { transform: scale(1);   box-shadow: 0 10px 10px rgba(0,0,0,0.3); }
+  50%       { transform: scale(1.3); box-shadow: 0 30px 20px rgba(0,0,0,0.3); }
+}
+.ripple-wrapper {
+  position: absolute;
+  z-index: 30;
+  top: 56px;
+  left: 8px;
+  transform: scale(0.35);
+  transform-origin: top left;
+}
+@media (min-width: 768px) {
+  .ripple-wrapper {
+    top: 96px;
+    left: auto;
+    right: 64px;
+    transform: scale(0.9);
+    transform-origin: top right;
+  }
+}
+@media (min-width: 1024px) {
+  .ripple-wrapper {
+    right: 96px;
+    transform: scale(1);
+  }
+}
+
 /* ── About text overlay ── */
 .about-text-container {
   position: absolute;
