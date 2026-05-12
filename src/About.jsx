@@ -5,7 +5,7 @@ export default function About() {
     <ShatterLoader>
       <div style={{
         width: '100%', height: '100%',
-        background: '#000 url("/BG-about.png") center/cover no-repeat',
+        background: '#000 url("/BG-about.png") center/contain no-repeat',
       }} />
     </ShatterLoader>
   );
