@@ -22,7 +22,7 @@ body { -webkit-font-smoothing: antialiased; overflow: hidden; }
 @media (max-width: 768px) {
   .about-text-container {
     left: 50%;
-    top: 50%;
+    top: 40%;
     transform: translate(-50%, -50%);
     width: 90%;
     text-align: center;
