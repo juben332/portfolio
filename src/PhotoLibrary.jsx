@@ -292,12 +292,11 @@ export default function PhotoLibrary() {
         ))}
 
         {stage.w > 0 && PHOTOS.map((photo, i) => {
-          if (selected?.id === photo.id) return null;
           const target = scattered ? scatterPositions[i] : stackPositions[i];
+          const isSelected = selected?.id === photo.id;
           return (
             <motion.div
               key={photo.id}
-              layoutId={`photo-${photo.id}`}
               style={{
                 ...styles.card,
                 width: cardW,
@@ -309,30 +308,32 @@ export default function PhotoLibrary() {
                 x: target.x,
                 y: target.y,
                 rotate: target.rotate,
+                opacity: isSelected ? 0 : 1,
+                scale: isSelected ? 0.94 : 1,
               }}
               transition={{
                 type: 'spring',
                 stiffness: 180,
                 damping: 22,
-                delay: scattered ? i * 0.025 : 0,
+                delay: scattered && !isSelected ? i * 0.025 : 0,
               }}
-              whileHover={scattered ? { scale: 1.06, zIndex: 110 } : {}}
-              whileTap={scattered ? { scale: 0.96 } : {}}
+              whileHover={scattered && !isSelected ? { scale: 1.06, zIndex: 110 } : {}}
+              whileTap={scattered && !isSelected ? { scale: 0.96 } : {}}
               onClick={(e) => {
                 e.stopPropagation();
                 if (scattered) setSelected(photo);
                 else setScattered(true);
               }}
             >
-<div style={{ ...styles.photoInner, background: photo.bg }}>
-              {photo.type === 'market' || photo.type === 'gif' ? (
-                <img
-                  src={photo.type === 'gif' ? photo.src : '/2222222.gif'}
-                  alt={photo.label}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                />
-              ) : null}
-            </div>
+              <div style={{ ...styles.photoInner, background: photo.bg }}>
+                {photo.type === 'market' || photo.type === 'gif' ? (
+                  <img
+                    src={photo.type === 'gif' ? photo.src : '/2222222.gif'}
+                    alt={photo.label}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                ) : null}
+              </div>
             </motion.div>
           );
         })}
@@ -357,14 +358,16 @@ export default function PhotoLibrary() {
               >←</motion.button>
 
               <motion.div
-                layoutId={`photo-${selected.id}`}
                 style={{
                   ...styles.detailCard,
                   width: detailSize.w,
                   height: detailSize.h,
                   padding: `${detailSize.w * 0.05}px ${detailSize.w * 0.05}px ${detailSize.w * 0.2}px`,
                 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 26 }}
+                initial={{ opacity: 0, scale: 0.82 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.82 }}
+                transition={{ type: 'spring', stiffness: 280, damping: 28 }}
               >
                 {selected.type === 'market' || selected.type === 'gif' ? (
                   <img
