@@ -364,9 +364,9 @@ export default function PhotoLibrary() {
                   height: detailSize.h,
                   padding: `${detailSize.w * 0.05}px ${detailSize.w * 0.05}px ${detailSize.w * 0.2}px`,
                 }}
-                initial={{ opacity: 0, scale: 0.82 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.82 }}
+                initial={{ opacity: 0, y: 60, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 80, scale: 0.92 }}
                 transition={{ type: 'spring', stiffness: 280, damping: 28 }}
               >
                 {selected.type === 'market' || selected.type === 'gif' ? (
